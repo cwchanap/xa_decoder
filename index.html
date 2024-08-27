@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XA Decoder Test</title>
+    <style>
+        .drum-input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>XA Decoder Test</h1>
+    <div class="drum-input">
+        <label for="bassInput">Bass: </label>
+        <input type="file" id="bassInput" accept=".xa">
+    </div>
+    <div class="drum-input">
+        <label for="highTomInput">High Tom: </label>
+        <input type="file" id="highTomInput" accept=".xa">
+    </div>
+    <div class="drum-input">
+        <label for="midTomInput">Mid Tom: </label>
+        <input type="file" id="midTomInput" accept=".xa">
+    </div>
+    <div class="drum-input">
+        <label for="lowTomInput">Low Tom: </label>
+        <input type="file" id="lowTomInput" accept=".xa">
+    </div>
+    <div class="drum-input">
+        <label for="hiHatInput">Hi-Hat: </label>
+        <input type="file" id="hiHatInput" accept=".xa">
+    </div>
+    <button id="decodeButton">Decode All</button>
+    <div id="results"></div>
+
+    <script type="module" src="index.js"></script>
+</body>
+
+</html>

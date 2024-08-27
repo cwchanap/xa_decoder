@@ -1,0 +1,23 @@
+[package]
+name = "xa_decoder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.4"
+web-sys = { version = "0.3", features = ["console"] }
+byteorder = "1.4"
+console_error_panic_hook = "0.1.7"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[[bin]]
+name = "xa_decoder"
+path = "src/main.rs"
+
+[profile.release]
+debug = true
