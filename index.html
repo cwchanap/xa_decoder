@@ -15,26 +15,10 @@
 <body>
     <h1>XA Decoder Test</h1>
     <div class="drum-input">
-        <label for="bassInput">Bass: </label>
-        <input type="file" id="bassInput" accept=".xa">
+        <label for="bassInput">Sound File: </label>
+        <input type="file" id="input" accept=".xa">
     </div>
-    <div class="drum-input">
-        <label for="highTomInput">High Tom: </label>
-        <input type="file" id="highTomInput" accept=".xa">
-    </div>
-    <div class="drum-input">
-        <label for="midTomInput">Mid Tom: </label>
-        <input type="file" id="midTomInput" accept=".xa">
-    </div>
-    <div class="drum-input">
-        <label for="lowTomInput">Low Tom: </label>
-        <input type="file" id="lowTomInput" accept=".xa">
-    </div>
-    <div class="drum-input">
-        <label for="hiHatInput">Hi-Hat: </label>
-        <input type="file" id="hiHatInput" accept=".xa">
-    </div>
-    <button id="decodeButton">Decode All</button>
+    <button id="decodeButton">Decode</button>
     <div id="results"></div>
 
     <script type="module" src="index.js"></script>

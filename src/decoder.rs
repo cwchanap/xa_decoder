@@ -1,9 +1,9 @@
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Write};
 
-const HEADER_SIZE_XA: usize = 32;
+pub const HEADER_SIZE_XA: usize = 32;
 const HEADER_SIZE_RIFF: usize = 44;
 const HEADER_MAGIC: u32 = 0x3144574b;
 const BLOCK_SAMPLES: u32 = 32;
@@ -110,12 +110,6 @@ impl Decoder {
             state: None,
             fmt: None,
         }
-    }
-
-    pub fn read_from_file(&mut self, file: &mut File) -> Result<Format, std::io::Error> {
-        let mut header = [0u8; HEADER_SIZE_XA];
-        file.read_exact(&mut header)?;
-        self.read_header(&header)
     }
 
     pub fn read_header(&mut self, header: &[u8]) -> Result<Format, std::io::Error> {

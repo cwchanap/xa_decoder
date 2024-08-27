@@ -1,7 +1,7 @@
 mod decoder;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use decoder::Decoder;
+use decoder::{Decoder, HEADER_SIZE_XA};
 use std::fs::File;
 use std::io::Read;
 
@@ -31,7 +31,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn process_file(xa_file: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut xa = File::open(xa_file)?;
     let mut decoder = Decoder::new();
-    let format = decoder.read_from_file(&mut xa).map_err(|e| e.to_string())?;
+
+    let mut header = [0u8; HEADER_SIZE_XA];
+    xa.read_exact(&mut header)?;
+    let format = decoder.read_header(&header).map_err(|e| e.to_string())?;
 
     println!("Format: {:?}", format);
 
@@ -42,6 +45,8 @@ fn process_file(xa_file: &str) -> Result<(), Box<dyn std::error::Error>> {
     let pcm_data_size = format.data_length_pcm as usize / 2; // 16-bit samples
     let mut pcm_data: Vec<i16> = vec![0i16; pcm_data_size];
 
+    println!("Src len: {}", xa_data.len());
+    println!("Dst len: {}", pcm_data.len());
     let blocks_decoded = decoder.decode(&xa_data, &mut pcm_data)?;
 
     println!("Decoded {} blocks", blocks_decoded);

@@ -2,7 +2,7 @@ mod decoder;
 
 use std::panic;
 
-use decoder::{Decoder, Format};
+use decoder::{Decoder, Format, HEADER_SIZE_XA};
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
@@ -78,23 +78,30 @@ impl WasmXADecoder {
     }
 
     fn internal_decode(&mut self, src: &[u8]) -> Result<Vec<i16>, String> {
-        let fmt = self
-            .0
-            .read_header(src)
-            .map_err(|e| format!("Error reading header: {}", e))?;
+        let fmt = self.0.fmt.as_ref().unwrap();
 
         console_log!(
             "Header read successfully. PCM data length: {}",
             fmt.data_length_pcm
         );
 
-        let mut pcm = vec![0i16; fmt.data_length_pcm as usize / 2];
+        let xa_data_size = fmt.blocks as usize * fmt.block_size_xa as usize;
+        let mut xa_data = vec![0u8; xa_data_size];
+        xa_data.copy_from_slice(&src[HEADER_SIZE_XA..]);
 
-        self.0
-            .decode(src, &mut pcm)
+        let pcm_data_size = fmt.data_length_pcm as usize / 2; // 16-bit samples
+        let mut pcm_data = vec![0i16; pcm_data_size];
+
+        console_log!("Src len: {}", xa_data.len());
+        console_log!("Dst len: {}", pcm_data.len());
+
+        let decoded_block = self.0
+            .decode(&xa_data, &mut pcm_data)
             .map_err(|e| format!("Error during decoding: {}", e))?;
 
-        Ok(pcm)
+        console_log!("Decoded {} blocks", decoded_block);
+
+        Ok(pcm_data)
     }
 }
 

@@ -4,25 +4,20 @@ let audioContext;
 
 async function decodeXA(xaData) {
     const decoder = new WasmXADecoder();
-    let format;
     try {
-        format = decoder.read_header(new Uint8Array(xaData));
+        const format = decoder.read_header(new Uint8Array(xaData));
         console.log(format);
-    } catch (error) {
-        console.error('Error reading XA header:', error);
-        throw error;
-    }
 
-    try {
         const pcmData = decoder.decode(new Uint8Array(xaData));
         console.log(pcmData);
+
+        return { format, pcmData };
     } catch (error) {
         console.error('Error during decoding:', error);
         console.error("Error stack:", error.stack);
         throw error;
     }
 
-    return { format, pcmData };
 }
 
 function convertToAudioBuffer(pcmData, sampleRate) {
@@ -57,43 +52,35 @@ async function decodeAllFiles() {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
 
-    const inputs = ['bassInput', 'highTomInput', 'midTomInput', 'lowTomInput', 'hiHatInput'];
+    const input = document.getElementById('input');
 
-    for (const inputId of inputs) {
-        const input = document.getElementById(inputId);
-        if (!input.files[0]) continue;
+    try {
+        const { format, pcmData, audioBuffer } = await decodeFile(input.files[0]);
 
-        try {
-            const { format, pcmData, audioBuffer } = await decodeFile(input.files[0]);
-
-            const first200Samples = Array.from(pcmData.slice(0, 200));
-            const resultHtml = `
-                <h2>${inputId}</h2>
+        const first200Samples = Array.from(pcmData.slice(0, 200));
+        const resultHtml = `
+                <h2>Result</h2>
                 <p>Sample Rate: ${format.samples_rate} Hz</p>
                 <p>Channels: ${format.channels}</p>
                 <p>PCM data (first 200 samples): ${JSON.stringify(first200Samples)}</p>
-                <button onclick="window.playAudio('${inputId}')">Play Sound</button>
+                <button onclick="window.playAudio('result')">Play Sound</button>
             `;
 
-            resultsDiv.innerHTML += resultHtml;
+        resultsDiv.innerHTML += resultHtml;
 
-            if (!window.audioBuffers) {
-                window.audioBuffers = {};
-            }
-            window.audioBuffers[inputId] = audioBuffer;
-        } catch (error) {
-            resultsDiv.innerHTML += `<h2>${inputId}</h2><p>Error: ${error.message}</p>`;
-        }
+        window.audioBuffers = audioBuffer;
+    } catch (error) {
+        resultsDiv.innerHTML += `<h2>Result</h2><p>Error: ${error.message}</p>`;
     }
 }
 
 // Add this function to the global scope so it can be called from the HTML
-window.playAudio = function (inputId) {
-    const audioBuffer = window.audioBuffers[inputId];
+window.playAudio = function () {
+    const audioBuffer = window.audioBuffers;
     if (audioBuffer) {
         playAudio(audioBuffer);
     } else {
-        console.error(`No audio buffer found for ${inputId}`);
+        console.error(`No audio buffer found`);
     }
 };
 
