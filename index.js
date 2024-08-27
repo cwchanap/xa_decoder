@@ -5,12 +5,10 @@ let audioContext;
 async function decodeXA(xaData) {
     const decoder = new WasmXADecoder();
     try {
-        const format = decoder.read_header(new Uint8Array(xaData));
-        console.log(format);
-
         const pcmData = decoder.decode(new Uint8Array(xaData));
-        console.log(pcmData);
+        const format = decoder.get_format();
 
+        console.log(format, pcmData);
         return { format, pcmData };
     } catch (error) {
         console.error('Error during decoding:', error);

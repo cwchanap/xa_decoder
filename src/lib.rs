@@ -52,14 +52,6 @@ impl WasmXADecoder {
         WasmXADecoder(Decoder::new())
     }
 
-    #[wasm_bindgen]
-    pub fn read_header(&mut self, src: &[u8]) -> Result<WasmXAFormat, JsValue> {
-        let fmt = self
-            .0
-            .read_header(src)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        Ok(WasmXAFormat(fmt))
-    }
 
     #[wasm_bindgen]
     pub fn decode(&mut self, src: &[u8]) -> Result<Vec<i16>, JsValue> {
@@ -77,8 +69,13 @@ impl WasmXADecoder {
         }
     }
 
+    pub fn get_format(&mut self) -> Result<WasmXAFormat, JsValue> {
+        let format = self.0.fmt.as_ref().unwrap();
+        Ok(WasmXAFormat(format.clone()))
+    }
+
     fn internal_decode(&mut self, src: &[u8]) -> Result<Vec<i16>, String> {
-        let fmt = self.0.fmt.as_ref().unwrap();
+        let fmt = self.0.read_header(src).map_err(|e| e.to_string())?;
 
         console_log!(
             "Header read successfully. PCM data length: {}",
