@@ -7,6 +7,8 @@ Original implementation from https://github.com/dridi/bjxa/.
 ```ts
 import init, { WasmXADecoder } from "xa_decoder";
 
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
 async function decodeAudioFile(file: File) {
     await init();
     const decoder = new WasmXADecoder();
@@ -15,12 +17,6 @@ async function decodeAudioFile(file: File) {
     const format = decoder.get_format();
 
     const audioBuffer = audioContext.createBuffer(1, data.length, format.samples_rate);
-    const channelData = audioBuffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) {
-        channelData[i] = data[i] / 32768;
-    }
-
-    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(audioContext.destination);
