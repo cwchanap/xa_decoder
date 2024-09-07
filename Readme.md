@@ -16,7 +16,13 @@ async function decodeAudioFile(file: File) {
     const data = decoder.decode(new Uint8Array(arrayBuffer));
     const format = decoder.get_format();
 
-    const audioBuffer = audioContext.createBuffer(1, data.length, format.samples_rate);
+    const audioBuffer = audioContext.createBuffer(format.channels, data.length, format.samples_rate);
+    for (let i = 0; i < format.channels; i++) {
+        const channelData = audioBuffer.getChannelData(i);
+        for (let j = 0; j < data.length; j++) {
+            channelData[j] = data[j] / 32768;
+        }
+    }
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(audioContext.destination);

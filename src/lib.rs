@@ -12,8 +12,16 @@ extern "C" {
     fn log(s: &str);
 }
 
+// Debug version of console_log macro
+#[cfg(debug_assertions)]
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format!($($t)*)))
+}
+
+// Release version of console_log macro (does nothing)
+#[cfg(not(debug_assertions))]
+macro_rules! console_log {
+    ($($t:tt)*) => ()
 }
 
 #[wasm_bindgen(start)]
@@ -51,7 +59,6 @@ impl WasmXADecoder {
     pub fn new() -> Self {
         WasmXADecoder(Decoder::new())
     }
-
 
     #[wasm_bindgen]
     pub fn decode(&mut self, src: &[u8]) -> Result<Vec<i16>, JsValue> {
