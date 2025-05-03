@@ -1,4 +1,4 @@
-mod decoder;
+pub mod decoder;
 
 use std::panic;
 
