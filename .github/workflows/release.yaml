@@ -23,6 +23,7 @@ jobs:
           source $HOME/.cargo/env
           rustup default stable
           cargo install wasm-pack
+      - run: cargo test
       - run: wasm-pack build --target web
       - name: Publish to npm
         run: wasm-pack publish
