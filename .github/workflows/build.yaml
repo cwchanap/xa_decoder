@@ -1,0 +1,19 @@
+name: Build & Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --all-targets
+      # shortcut: warnings don't fail the build yet (existing code has ~16 clippy warnings, fmt diff too); add `-- -D warnings` and `cargo fmt --check` after a cleanup pass
+      - run: cargo clippy --all-targets
