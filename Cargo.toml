@@ -12,6 +12,9 @@ web-sys = { version = "0.3", features = ["console"] }
 byteorder = "1.4"
 console_error_panic_hook = "0.1.7"
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
@@ -19,6 +22,9 @@ path = "src/lib.rs"
 [[bin]]
 name = "xa_decoder"
 path = "src/main.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

@@ -1,5 +1,9 @@
 /target
 
 *.wav
-*.xa
+# One-off drum samples kept local; bass.xa is the committed test fixture
+floortom.xa
+hightom.xa
+hihatclose.xa
+midtom.xa
 *.exe
