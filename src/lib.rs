@@ -12,16 +12,17 @@ extern "C" {
     fn log(s: &str);
 }
 
-// Debug version of console_log macro
-#[cfg(debug_assertions)]
+// Debug version of console_log macro (browser only; on other targets the
+// wasm-bindgen import would panic when called)
+#[cfg(all(debug_assertions, target_arch = "wasm32"))]
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format!($($t)*)))
 }
 
-// Release version of console_log macro (does nothing)
-#[cfg(not(debug_assertions))]
+// Release / non-wasm version of console_log macro (does nothing)
+#[cfg(not(all(debug_assertions, target_arch = "wasm32")))]
 macro_rules! console_log {
-    ($($t:tt)*) => ()
+    ($($t:tt)*) => {};
 }
 
 #[wasm_bindgen(start)]
@@ -50,6 +51,12 @@ impl WasmXAFormat {
     #[wasm_bindgen(getter)]
     pub fn data_length_pcm(&self) -> u32 {
         self.0.data_length_pcm
+    }
+}
+
+impl Default for WasmXADecoder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -90,8 +97,15 @@ impl WasmXADecoder {
         );
 
         let xa_data_size = fmt.blocks as usize * fmt.block_size_xa as usize;
-        let mut xa_data = vec![0u8; xa_data_size];
-        xa_data.copy_from_slice(&src[HEADER_SIZE_XA..]);
+        let xa_data = src
+            .get(HEADER_SIZE_XA..HEADER_SIZE_XA + xa_data_size)
+            .ok_or_else(|| {
+                format!(
+                    "XA data truncated: expected {} bytes after header, got {}",
+                    xa_data_size,
+                    src.len().saturating_sub(HEADER_SIZE_XA)
+                )
+            })?;
 
         let pcm_data_size = fmt.data_length_pcm as usize / 2; // 16-bit samples
         let mut pcm_data = vec![0i16; pcm_data_size];
@@ -99,11 +113,9 @@ impl WasmXADecoder {
         console_log!("Src len: {}", xa_data.len());
         console_log!("Dst len: {}", pcm_data.len());
 
-        let decoded_block = self.0
-            .decode(&xa_data, &mut pcm_data)
+        self.0
+            .decode(xa_data, &mut pcm_data)
             .map_err(|e| format!("Error during decoding: {}", e))?;
-
-        console_log!("Decoded {} blocks", decoded_block);
 
         Ok(pcm_data)
     }
@@ -113,4 +125,47 @@ impl WasmXADecoder {
 #[wasm_bindgen]
 pub fn handle_panic(error: JsValue) {
     console::error_1(&error);
+}
+
+// Real wasm32 tests: JsValue errors can only be constructed on wasm, so these
+// run under `wasm-pack test --node`.
+#[cfg(all(test, target_arch = "wasm32"))]
+mod wasm_tests {
+    use crate::decoder::HEADER_SIZE_XA;
+    use crate::WasmXADecoder;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    static BASS_XA: &[u8] = include_bytes!("../bass.xa");
+
+    #[wasm_bindgen_test]
+    fn decode_bass_xa_and_read_format() {
+        let mut decoder = WasmXADecoder::new();
+        let pcm_data = decoder.decode(BASS_XA).expect("Failed to decode XA data");
+        assert!(!pcm_data.is_empty(), "PCM data should not be empty");
+
+        let format = decoder.get_format().expect("Failed to get format");
+        assert!(format.samples_rate() > 0);
+        assert!(format.channels() == 1 || format.channels() == 2);
+        assert!(format.data_length_pcm() > 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn empty_input_is_error() {
+        let mut decoder = WasmXADecoder::new();
+        assert!(decoder.decode(&[]).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn header_only_input_is_error() {
+        let mut decoder = WasmXADecoder::new();
+        // Header only: no XA payload follows, so decode must return Err, not panic.
+        assert!(decoder.decode(&BASS_XA[..HEADER_SIZE_XA]).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn truncated_input_is_error() {
+        let mut decoder = WasmXADecoder::new();
+        // One byte short of the full payload.
+        assert!(decoder.decode(&BASS_XA[..BASS_XA.len() - 1]).is_err());
+    }
 }

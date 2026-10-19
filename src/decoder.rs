@@ -1,7 +1,6 @@
-
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::fs::File;
-use std::io::{Write};
+use std::io::Write;
 
 pub const HEADER_SIZE_XA: usize = 32;
 const HEADER_SIZE_RIFF: usize = 44;
@@ -42,7 +41,7 @@ struct ChannelState {
     prev1: i16,
 }
 
-struct DecoderState {
+pub(crate) struct DecoderState {
     data_length: u32,
     samples: u32,
     samples_rate: u16,
@@ -98,9 +97,9 @@ impl DecoderState {
     }
 }
 
-
+#[derive(Default)]
 pub struct Decoder {
-    pub state: Option<DecoderState>,
+    pub(crate) state: Option<DecoderState>,
     pub fmt: Option<Format>,
 }
 
@@ -113,6 +112,13 @@ impl Decoder {
     }
 
     pub fn read_header(&mut self, header: &[u8]) -> Result<Format, std::io::Error> {
+        if header.len() < HEADER_SIZE_XA {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("XA header too short: {} bytes", header.len()),
+            ));
+        }
+
         println!("Header contents:");
         for (i, &byte) in header.iter().enumerate() {
             print!("{:02X} ", byte);
@@ -213,11 +219,9 @@ impl Decoder {
 
     fn inflate_4bit(dec: &DecoderState, dst: &mut [i16], off: usize, src: &[u8]) -> u8 {
         let profile = src[0];
-        let mut src_off = 1;
 
-        for n in (0..BLOCK_SAMPLES).step_by(2) {
+        for (src_off, n) in (1..).zip((0..BLOCK_SAMPLES).step_by(2)) {
             let s = src[src_off] as u16;
-            src_off += 1;
 
             dst[off + n as usize * dec.channels as usize] = ((s & 0xf0) << 8) as i16;
             dst[off + (n + 1) as usize * dec.channels as usize] = ((s & 0x0f) << 12) as i16;
@@ -255,11 +259,9 @@ impl Decoder {
 
     fn inflate_8bit(dec: &DecoderState, dst: &mut [i16], off: usize, src: &[u8]) -> u8 {
         let profile = src[0];
-        let mut src_off = 1;
 
-        for n in 0..BLOCK_SAMPLES {
-            dst[off + n as usize * dec.channels as usize] = ((src[src_off] as i16) << 8) as i16;
-            src_off += 1;
+        for (src_off, n) in (1..).zip(0..BLOCK_SAMPLES) {
+            dst[off + n as usize * dec.channels as usize] = (src[src_off] as i16) << 8;
         }
 
         profile

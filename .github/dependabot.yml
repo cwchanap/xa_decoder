@@ -4,7 +4,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # wasm-bindgen family moves together and conflicts on Cargo.lock
+      wasm-bindgen:
+        patterns:
+          - "wasm-bindgen*"
+          - "js-sys"
+          - "web-sys"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      all-actions:
+        patterns: ["*"]
