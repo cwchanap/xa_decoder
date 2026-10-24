@@ -213,17 +213,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde-wasm-bindgen"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3b4c031cd0d9014307d82b8abf653c0290fbdaeb4c02d00c63cf52f728628bf"
-dependencies = [
- "js-sys",
- "serde",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "serde_core"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -439,8 +428,6 @@ version = "0.1.2"
 dependencies = [
  "byteorder",
  "console_error_panic_hook",
- "serde",
- "serde-wasm-bindgen",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",
